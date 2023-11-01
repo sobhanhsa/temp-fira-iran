@@ -1,13 +1,7 @@
 import cv2	
 import numpy as np
 
-def make_poly(width,height,i = 30, j = 160, k = 0 ):
-	
-    i = 15
-
-    j = 0
-
-    k = 0
+def make_poly(width,height,i = 15, j = 0, k = 0 ):
 
     return np.array([
     [
