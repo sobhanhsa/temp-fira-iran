@@ -3,11 +3,12 @@ import time
 import cv2
 import config
 import numpy as np
-from utils import make_poly
+from utils import handle_brake, make_poly
 from utils import draw_lines
 from utils import calc_avg_line
 from utils import translate
 from utils import make_hood_poly
+from utils import handle_brake_intensity
 
 
 def main():
@@ -24,16 +25,36 @@ def main():
     actions_list = {
         "right" : [
             {
-                "speed": 7,
-                "steering" : 40,
-                "time" : 3
+                "speed": 30,
+                "steering" : 0,
+                "time" : 2
             },
             {
-                "speed": 10,
-                "steering" : 60,
-                "time" : 7
+                "speed": 5,
+                "steering" : 100,
+                "time" : 5.5
+            }
+        ],
+        "straight":[
+            {
+                "speed":40,
+                "steering":0,
+                "time":5.5
+            },
+        ],
+        "left":[
+            {
+                "speed": 30,
+                "steering" : 0,
+                "time" : 4.5
+            },
+            {
+                "speed": 5,
+                "steering" : -100,
+                "time" : 5.5
             }
         ]
+
     }
 
     #Calling the class
@@ -53,7 +74,7 @@ def main():
             
             counter += 1 
 
-            speed = 70
+            speed = 20
 
             
             #Get the data. Need to call it every time getting image and sensor data
@@ -62,6 +83,8 @@ def main():
             #Start getting image and sensor data after 4 loops. for unclear some reason it's really important 
             if(counter > 4): 
 
+                car_speed = car.getSpeed()
+                
                 #returns an opencv image type array. if you use PIL you need to invert the color channels.
                 _image = car.getImage()
 
@@ -69,13 +92,20 @@ def main():
                     print('None image received!!    ')
                     continue
 
-                carSpeed = car.getSpeed()
                 
                 image = _image.copy()
             
                 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
                 blank = np.zeros_like(gray)	
+
+
+                height, width = gray.shape
+
+#                         (400, 350),
+#                         (400 , 150),
+#                         (512 ,150),
+#                         (512, 350)
 
                 sign_poly = np.array([
                     [
@@ -90,21 +120,39 @@ def main():
 
                 sign_mask_img = cv2.bitwise_and(gray,sign_mask_shape)
 
-                final_sign_mask_img = cv2.GaussianBlur(sign_mask_img, (1,1), 0)
+                sign_mask_img_overlay  = cv2.bitwise_or(gray,sign_mask_shape)
 
                 arucoDict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_APRILTAG_36h11)
                 arucoParams = cv2.aruco.DetectorParameters()
-                (corners, ids, rejected) = cv2.aruco.detectMarkers(final_sign_mask_img, arucoDict,
+                (corners, ids, rejected) = cv2.aruco.detectMarkers(sign_mask_img, arucoDict,
                     parameters=arucoParams)
                 
                 auto_mode = False
 
-                if ids:
-                    print(tags_list[str(int(ids[0][0]))])
-                    auto_mode = True
+                if ids is not None:
+                    
+                    smalest_y = 100000000
+                    smalest_x = 100000000
+                    biggest_x = -100000000
+
+                    for (x,y) in corners[0][0]:
+                        if y < smalest_y:
+                            smalest_y = y
+                        if x < smalest_x:
+                            smalest_x = x
+                        if x > biggest_x:
+                            biggest_x = x
+                    print("unval ",tags_list[str(int(ids[0][0]))])
+                    if (biggest_x - smalest_x > 27) :
+                        print(tags_list[str(int(ids[0][0]))])
+
+                        auto_mode = True
+
+
 
                 # car.setSpeed(0)
                 if auto_mode :
+
 
                     # if corners:
                     #     corners_img = cv2.rectangle(image.copy(),(int(corners[0][0][0][0]),int(corners[0][0][0][1])),(int(corners[0][0][2][0]),int(corners[0][0][2][1])),color=(255,0,0),thickness=2)
@@ -116,24 +164,56 @@ def main():
 
                     action = tags_list[str(int(ids[0][0]))]
                     
-                    time.sleep(2)
-                    
-                    for instruction in actions_list[action]:
-                        car.setSpeed(instruction["speed"])
-                        car.setSteering(instruction["steering"])
-                        time.sleep(instruction["time"])
+                    if action == "right":
 
-                    car.setSteering(0)
-                    car.setSpeed(0)
+                        handle_brake(car,car_speed)
+                        
+                        for instruction in actions_list[action]:
+                            car.setSpeed(instruction["speed"])
+                            car.setSteering(instruction["steering"])
+                            time.sleep(instruction["time"])
 
-                    auto_mode = False
+                    if action == "straight":
+                        
+                        car.setSteering(-translate(-45,45,-1.5,1.5,steering))
+                        print("steering ==",steering)
+
+                        handle_brake(car,car_speed)
+
+                        for instruction in actions_list[action]:
+                            car.setSpeed(instruction["speed"])
+                            car.setSteering(instruction["steering"])
+                            time.sleep(instruction["time"])
+
+                    if action == "left":
+                        if car_speed > 11:
+                            time.sleep(0.5)
+                        else:
+                            time.sleep(1.4)
+
+                        car.setSpeed(-car_speed * handle_brake_intensity(car_speed))
+
+                        time.sleep(1)
+
+                        car.setSpeed(0)
+
+                        time.sleep(4)
+
+                        for instruction in actions_list[action]:
+                            car.setSpeed(instruction["speed"])
+                            car.setSteering(instruction["steering"])
+                            time.sleep(instruction["time"])
+
+
+                    car.getData()
+
+                    continue
+
                 else :    
 
                     blur = cv2.GaussianBlur(gray, (3,15), 0)
 
                     edge = cv2.Canny(blur, 200, 300)
-
-                    height, width = edge.shape
 
                     poly = make_poly(width,height)
 
@@ -152,39 +232,55 @@ def main():
                     gray_mask_img = cv2.bitwise_and(gray,final_mask_shape)
 
 
-                    lines = cv2.HoughLinesP(mask_img, rho=1, theta=np.pi/180, threshold=90, lines=np.array([]), minLineLength=10, maxLineGap=20)
+                    lines = cv2.HoughLinesP(mask_img, rho=5, theta=np.pi/180, threshold=90, lines=np.array([]), minLineLength=10, maxLineGap=20)
 
                     if lines is None:
-                        # print('no line detected!')
-                        canContinue = False
-
+                        print('no line detected!')
+                        continue
 
                     lines_img = image.copy()
 
                     error = 0
 
-                    canContinue = False
+                    canContinue = True
 
                     if canContinue == True :
 
                         if (len(lines) == 1):
                             lines = [lines]
 
-                        avg_lines , error = calc_avg_line(blank.copy(),lines) 
+                        avg_lines , error , right_error , left_error = calc_avg_line(blank.copy(),lines) 
 
-        
+                        if (right_error > 1.4 )& (abs(left_error) > 1.4):
+                            error = 0                        
+
+                        if (right_error == 0):
+                            error = -2
+
+                        if (left_error == 0):
+                            error = 2
+
+                        if right_error < abs(left_error):
+                            error *= 1.5
+
+                        if (abs(left_error) < 0.5):
+                            error = 1 / error
+
                         error_trnaslated = translate(-1.5,1.5,-45,45,float(error))
 
                         steering = -error_trnaslated
 
+                        print(right_error,left_error)
+
                         lines_img = draw_lines(image.copy(),lines,(0,255,0))
+
                         
                     
                     #set final car steering
                     
                     
-                    speed = 0
-                    steering = 0
+                    # speed = 0
+                    # steering = 0
                     
                     #set final car speed
                     car.setSpeed(speed)
@@ -192,6 +288,8 @@ def main():
                     car.setSteering(steering)                
 
                 # cv2.imshow('avg lines image', avg_lines_img)
+                
+                # cv2.imshow('sign',sign_mask_img_overlay)
 
                 #break the loop when q pressed
                 if cv2.waitKey(10) == ord('q'):

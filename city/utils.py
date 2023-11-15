@@ -1,12 +1,37 @@
 import cv2	
 import numpy as np
+import time
 
-def make_poly(width,height,i = 15, j = 0, k = 0 ):
+def handle_brake_intensity(current_speed):
+
+	if current_speed > 25:
+		return 30
+	elif current_speed > 11:
+		return 30
+	return 7
+
+def handle_brake(car,car_speed):
+	if car_speed > 11:
+		time.sleep(0.5)
+	else:
+		time.sleep(1.4)
+
+		car.setSpeed(-car_speed * handle_brake_intensity(car_speed))
+
+
+		time.sleep(1)
+
+		car.setSpeed(0)
+
+
+		time.sleep(4)
+
+def make_poly(width,height,i = 50, j = 40, k = 0 ):
 
     return np.array([
     [
         (0, height - k),
-        (int(width / 2) - i , int(height / 2) + j),
+        (int(width / 2) - i , int(height / 2) - j),
         (int(width / 2) + i , int(height / 2) + j),
         (width, height -k)
     ]
@@ -77,4 +102,4 @@ def calc_avg_line(image, lines):
 	error = (left_line_avg_fix[0] + right_line_avg_fix[0]) / 2
 		
  
-	return np.array([left_line, right_line]), error
+	return np.array([left_line, right_line]), error , right_line_avg_fix[0] , left_line_avg_fix[0]
