@@ -130,10 +130,13 @@ def main():
                 auto_mode = False
 
                 if ids is not None:
-                    
+                    action = tags_list[str(int(ids[0][0]))]
+
                     smalest_y = 100000000
                     smalest_x = 100000000
                     biggest_x = -100000000
+
+                    i = 48
 
                     for (x,y) in corners[0][0]:
                         if y < smalest_y:
@@ -142,8 +145,12 @@ def main():
                             smalest_x = x
                         if x > biggest_x:
                             biggest_x = x
-                    print("unval ",tags_list[str(int(ids[0][0]))])
-                    if (biggest_x - smalest_x > 45) :
+                    print("unval ",action)
+
+                    if action == "stop":
+                        i = 40
+
+                    if (biggest_x - smalest_x > i) :
                         print(biggest_x,smalest_x)
                         print(tags_list[str(int(ids[0][0]))])
 
@@ -175,6 +182,7 @@ def main():
                             time.sleep(instruction["time"])
 
                     if action == "straight":
+
                         handle_brake(car,car_speed)
 
                         for instruction in actions_list[action]:
@@ -194,6 +202,11 @@ def main():
                             car.setSteering(instruction["steering"])
                             time.sleep(instruction["time"])
 
+                    if action == "stop":
+
+                        handle_brake(car,car_speed)
+
+                        break
 
                     car.getData()
 
@@ -251,8 +264,8 @@ def main():
                         if (right_error == 0):
                             error = -3
     
-                        if (left_error == 0):
-                            speed = 7
+                        if (left_error == 0) & (right_error > 1):
+                            speed = 5
                             error = 6
 
                         if (abs(error) < 0.5) & (error != 0):
