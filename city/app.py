@@ -32,12 +32,12 @@ def main():
             {
                 "speed": 5,
                 "steering" : 100,
-                "time" : 5.5
+                "time" : 5.8
             }
         ],
         "straight":[
             {
-                "speed":40,
+                "speed":35,
                 "steering":0,
                 "time":5.5
             },
@@ -46,12 +46,12 @@ def main():
             {
                 "speed": 30,
                 "steering" : 0,
-                "time" : 4.5
+                "time" : 2
             },
             {
-                "speed": 5,
-                "steering" : -100,
-                "time" : 5.5
+                "speed": 10,
+                "steering" : -55,
+                "time" : 9
             }
         ]
 
@@ -109,8 +109,8 @@ def main():
 
                 sign_poly = np.array([
                     [
-                        (400, 350),
-                        (400 , 150),
+                        (250        , 350),
+                        (250         , 150),
                         (512 ,150),
                         (512, 350)
                     ]
@@ -143,7 +143,8 @@ def main():
                         if x > biggest_x:
                             biggest_x = x
                     print("unval ",tags_list[str(int(ids[0][0]))])
-                    if (biggest_x - smalest_x > 27) :
+                    if (biggest_x - smalest_x > 45) :
+                        print(biggest_x,smalest_x)
                         print(tags_list[str(int(ids[0][0]))])
 
                         auto_mode = True
@@ -174,10 +175,6 @@ def main():
                             time.sleep(instruction["time"])
 
                     if action == "straight":
-                        
-                        car.setSteering(-translate(-45,45,-1.5,1.5,steering))
-                        print("steering ==",steering)
-
                         handle_brake(car,car_speed)
 
                         for instruction in actions_list[action]:
@@ -185,19 +182,12 @@ def main():
                             car.setSteering(instruction["steering"])
                             time.sleep(instruction["time"])
 
-                    if action == "left":
-                        if car_speed > 11:
-                            time.sleep(0.5)
-                        else:
-                            time.sleep(1.4)
-
-                        car.setSpeed(-car_speed * handle_brake_intensity(car_speed))
-
-                        time.sleep(1)
-
                         car.setSpeed(0)
 
-                        time.sleep(4)
+                    if action == "left":
+
+                        handle_brake(car,car_speed)
+
 
                         for instruction in actions_list[action]:
                             car.setSpeed(instruction["speed"])
@@ -211,13 +201,13 @@ def main():
 
                 else :    
 
-                    blur = cv2.GaussianBlur(gray, (3,15), 0)
+                    blur = cv2.GaussianBlur(gray.copy(), (3,15), 0)
 
                     edge = cv2.Canny(blur, 200, 300)
 
                     poly = make_poly(width,height)
 
-                    hood_poly = make_hood_poly(width,height)
+                    hood_poly = make_hood_poly(width,height)  
 
                     mask_shape = cv2.fillPoly(blank.copy(), pts=[poly], color=255)
             
@@ -232,13 +222,16 @@ def main():
                     gray_mask_img = cv2.bitwise_and(gray,final_mask_shape)
 
 
-                    lines = cv2.HoughLinesP(mask_img, rho=5, theta=np.pi/180, threshold=90, lines=np.array([]), minLineLength=10, maxLineGap=20)
+                    # lines = cv2.HoughLinesP(mask_img, rho=5, theta=np.pi/180, threshold=90, lines=np.array([]), minLineLength=10, maxLineGap=20)
+                    lines = cv2.HoughLinesP(mask_img, rho=5, theta=np.pi/180 , threshold=90, lines=np.array([]), minLineLength=10, maxLineGap=20)
+
 
                     if lines is None:
                         print('no line detected!')
                         continue
 
                     lines_img = image.copy()
+
 
                     error = 0
 
@@ -249,21 +242,20 @@ def main():
                         if (len(lines) == 1):
                             lines = [lines]
 
-                        avg_lines , error , right_error , left_error = calc_avg_line(blank.copy(),lines) 
+                        avg_lines , error , right_error , left_error  = calc_avg_line(blank.copy(),lines) 
 
-                        if (right_error > 1.4 )& (abs(left_error) > 1.4):
-                            error = 0                        
+
+                        if (right_error > 1.3 )& (abs(left_error) > 1.3):
+                            error = 0
 
                         if (right_error == 0):
-                            error = -2
-
+                            error = -3
+    
                         if (left_error == 0):
-                            error = 2
+                            speed = 7
+                            error = 6
 
-                        if right_error < abs(left_error):
-                            error *= 1.5
-
-                        if (abs(left_error) < 0.5):
+                        if (abs(error) < 0.5) & (error != 0):
                             error = 1 / error
 
                         error_trnaslated = translate(-1.5,1.5,-45,45,float(error))
@@ -289,7 +281,7 @@ def main():
 
                 # cv2.imshow('avg lines image', avg_lines_img)
                 
-                # cv2.imshow('sign',sign_mask_img_overlay)
+                cv2.imshow("mask",sign_mask_img)
 
                 #break the loop when q pressed
                 if cv2.waitKey(10) == ord('q'):

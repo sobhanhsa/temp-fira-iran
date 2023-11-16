@@ -5,10 +5,10 @@ import time
 def handle_brake_intensity(current_speed):
 
 	if current_speed > 25:
-		return 30
+		return 10
 	elif current_speed > 11:
-		return 30
-	return 7
+		return 8
+	return 6
 
 def handle_brake(car,car_speed):
 	if car_speed > 11:
@@ -19,7 +19,7 @@ def handle_brake(car,car_speed):
 		car.setSpeed(-car_speed * handle_brake_intensity(car_speed))
 
 
-		time.sleep(1)
+		time.sleep(1.2)
 
 		car.setSpeed(0)
 
@@ -72,6 +72,7 @@ def make_coordinates(image, line):
 		return np.array([0,0,0,0])
 
 def calc_avg_line(image, lines):
+
 	left_lines = []
 	right_lines = []
 	
@@ -86,6 +87,8 @@ def calc_avg_line(image, lines):
 				# left_lines.append((slope, intercept))
 		else:
 			right_lines.append((slope, intercept))
+
+
 
 	left_line_avg = np.average(left_lines, axis=0) 
 	right_line_avg = np.average(right_lines, axis=0) 
