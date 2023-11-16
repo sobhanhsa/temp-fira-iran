@@ -27,7 +27,7 @@ def main():
             {
                 "speed": 30,
                 "steering" : 0,
-                "time" : 2
+                "time" : 2.5
             },
             {
                 "speed": 5,
@@ -85,7 +85,6 @@ def main():
 
                 car_speed = car.getSpeed()
                 
-                #returns an opencv image type array. if you use PIL you need to invert the color channels.
                 _image = car.getImage()
 
                 if _image is None:
@@ -132,15 +131,12 @@ def main():
                 if ids is not None:
                     action = tags_list[str(int(ids[0][0]))]
 
-                    smalest_y = 100000000
                     smalest_x = 100000000
                     biggest_x = -100000000
 
-                    i = 48
+                    i = 46
 
                     for (x,y) in corners[0][0]:
-                        if y < smalest_y:
-                            smalest_y = y
                         if x < smalest_x:
                             smalest_x = x
                         if x > biggest_x:
@@ -148,7 +144,7 @@ def main():
                     print("unval ",action)
 
                     if action == "stop":
-                        i = 40
+                        i = 35
 
                     if (biggest_x - smalest_x > i) :
                         print(biggest_x,smalest_x)
@@ -171,17 +167,9 @@ def main():
                     # cv2.imshow("sign mask", final_sign_mask_img)
 
                     action = tags_list[str(int(ids[0][0]))]
-                    
-                    if action == "right":
-
-                        handle_brake(car,car_speed)
-                        
-                        for instruction in actions_list[action]:
-                            car.setSpeed(instruction["speed"])
-                            car.setSteering(instruction["steering"])
-                            time.sleep(instruction["time"])
 
                     if action == "straight":
+                        car.setSteering(0)
 
                         handle_brake(car,car_speed)
 
@@ -191,22 +179,19 @@ def main():
                             time.sleep(instruction["time"])
 
                         car.setSpeed(0)
-
-                    if action == "left":
+                    elif action == "stop":
 
                         handle_brake(car,car_speed)
 
+                        break
+                    else:
+                        handle_brake(car,car_speed)
 
                         for instruction in actions_list[action]:
                             car.setSpeed(instruction["speed"])
                             car.setSteering(instruction["steering"])
                             time.sleep(instruction["time"])
 
-                    if action == "stop":
-
-                        handle_brake(car,car_speed)
-
-                        break
 
                     car.getData()
 
@@ -292,9 +277,8 @@ def main():
                     
                     car.setSteering(steering)                
 
-                # cv2.imshow('avg lines image', avg_lines_img)
+                cv2.imshow('image', sign_mask_img)
                 
-                cv2.imshow("mask",sign_mask_img)
 
                 #break the loop when q pressed
                 if cv2.waitKey(10) == ord('q'):
