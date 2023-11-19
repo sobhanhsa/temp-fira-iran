@@ -16,10 +16,11 @@ def main():
     #straight sign == 4
     #left sign == 3
     #stop sign == 5
-    tags_list = {"2":"right",
-                 "3":"left",
-                 "4":"straight",
-                 "5":"stop"
+    tags_list = {
+        "2":"right",
+        "3":"left",
+        "4":"straight",
+        "5":"stop"
     }
     
     actions_list = {
@@ -39,7 +40,7 @@ def main():
             {
                 "speed":35,
                 "steering":0,
-                "time":5.5
+                "time":6
             },
         ],
         "left":[
@@ -55,6 +56,13 @@ def main():
             }
         ]
 
+    }
+
+    actions_delay = {
+        "right":1,
+        "left":0.75,
+        "straight":0.8,
+        "stop":2
     }
 
     #Calling the class
@@ -74,7 +82,7 @@ def main():
             
             counter += 1 
 
-            speed = 20
+            speed = 30
 
             
             #Get the data. Need to call it every time getting image and sensor data
@@ -84,6 +92,7 @@ def main():
             if(counter > 4): 
 
                 car_speed = car.getSpeed()
+    
                 
                 _image = car.getImage()
 
@@ -91,6 +100,7 @@ def main():
                     print('None image received!!    ')
                     continue
 
+                
                 
                 image = _image.copy()
             
@@ -108,10 +118,10 @@ def main():
 
                 sign_poly = np.array([
                     [
-                        (250        , 350),
-                        (250         , 150),
-                        (512 ,150),
-                        (512, 350)
+                        (150 , height),
+                        (150 , 0),
+                        (512 , 0),
+                        (512 , height)
                     ]
                     ])
 
@@ -121,6 +131,7 @@ def main():
 
                 sign_mask_img_overlay  = cv2.bitwise_or(gray,sign_mask_shape)
 
+
                 arucoDict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_APRILTAG_36h11)
                 arucoParams = cv2.aruco.DetectorParameters()
                 (corners, ids, rejected) = cv2.aruco.detectMarkers(sign_mask_img, arucoDict,
@@ -128,29 +139,58 @@ def main():
                 
                 auto_mode = False
 
+                prepare_auto_mode = False
+
                 if ids is not None:
+
                     action = tags_list[str(int(ids[0][0]))]
 
                     smalest_x = 100000000
                     biggest_x = -100000000
 
-                    i = 46
+                    smalest_y = 100000000
+                    biggest_y = -100000000
+
+                    i = 70
+
+                    c = 25
 
                     for (x,y) in corners[0][0]:
                         if x < smalest_x:
                             smalest_x = x
-                        if x > biggest_x:
+                        elif x > biggest_x:
                             biggest_x = x
-                    print("unval ",action)
+                        if y < smalest_y:
+                            smalest_y = y
+                        elif y > biggest_y:
+                            biggest_y = y
+                    
+                    diff = biggest_x - smalest_x
+
+                    # print("rejected ",action)
+                    # print("x",biggest_x - smalest_x)
+                    # print("y",biggest_y - smalest_y)
 
                     if action == "stop":
                         i = 35
 
-                    if (biggest_x - smalest_x > i) :
+                    if(diff > c):
+                        prepare_auto_mode  = True
+                        if diff < 30:
+                            prepare_auto_mode_intensity = "slight"
+                        elif diff < 35:
+                            prepare_auto_mode_intensity = "medium"
+                        else:
+                            prepare_auto_mode_intensity = "hight"
+                            
+
+                    if (diff > i) :
                         print(biggest_x,smalest_x)
+                        # print(biggest_y,smalest_y)
                         print(tags_list[str(int(ids[0][0]))])
 
                         auto_mode = True
+
 
 
 
@@ -166,25 +206,22 @@ def main():
                    
                     # cv2.imshow("sign mask", final_sign_mask_img)
 
+                    car.setSteering(0)
+
                     action = tags_list[str(int(ids[0][0]))]
 
-                    if action == "straight":
-                        car.setSteering(0)
 
-                        handle_brake(car,car_speed)
-
-                        for instruction in actions_list[action]:
-                            car.setSpeed(instruction["speed"])
-                            car.setSteering(instruction["steering"])
-                            time.sleep(instruction["time"])
-
-                        car.setSpeed(0)
-                    elif action == "stop":
-
+    
+                    if action == "stop":
+                        time.sleep(actions_delay[action])
+                        
                         handle_brake(car,car_speed)
 
                         break
                     else:
+
+                        time.sleep(actions_delay[action])
+
                         handle_brake(car,car_speed)
 
                         for instruction in actions_list[action]:
@@ -230,7 +267,6 @@ def main():
 
                     lines_img = image.copy()
 
-
                     error = 0
 
                     canContinue = True
@@ -242,8 +278,23 @@ def main():
 
                         avg_lines , error , right_error , left_error  = calc_avg_line(blank.copy(),lines) 
 
+                        a = 1.3
 
-                        if (right_error > 1.3 )& (abs(left_error) > 1.3):
+                        if prepare_auto_mode:
+                            print("prepare mode activated!")
+                            print(prepare_auto_mode_intensity)
+                            if prepare_auto_mode_intensity == "hight":
+                                error = translate(-1.5,1.5,-4,1,error)
+                                speed = 7
+                            elif prepare_auto_mode_intensity == "medium":
+                                error = translate(-1.5,1.5,-3,1,error)
+                                speed = 15
+                            # prepare_auto_mode_intensity == "slight"
+                            else:
+                                error = translate(-1.5,1.5,-2.5,1.5,error)
+                                speed = 25
+                            a = 4
+                        if (right_error > a )& (abs(left_error) > a):
                             error = 0
 
                         if (right_error == 0):
@@ -258,9 +309,11 @@ def main():
 
                         error_trnaslated = translate(-1.5,1.5,-45,45,float(error))
 
+                        
+
                         steering = -error_trnaslated
 
-                        print(right_error,left_error)
+                        # print(right_error,left_error)
 
                         lines_img = draw_lines(image.copy(),lines,(0,255,0))
 

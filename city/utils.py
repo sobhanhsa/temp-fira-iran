@@ -5,26 +5,30 @@ import time
 def handle_brake_intensity(current_speed):
 
 	if current_speed > 25:
-		return 10
-	elif current_speed > 11:
-		return 8
-	return 6
+		print("brake intensity 25")
+		return 5
+	elif current_speed > 10:
+		print("brake intensity 10")
+		return 5.5
+	elif current_speed > 6:
+		print("brake intensity 5")
+		return 5
+	print("brake intensity 0")
+	return 4.2
 
-def handle_brake(car,car_speed):
-	if car_speed > 11:
-		time.sleep(0.5)
-	else:
-		time.sleep(1.4)
+def handle_brake(car,car_speed,delay=0):
+		print("brake handled!")
+		time.sleep(delay)
 
 		car.setSpeed(-car_speed * handle_brake_intensity(car_speed))
 
 
-		time.sleep(1.2)
+		time.sleep(1.7)
 
 		car.setSpeed(0)
 
 
-		time.sleep(4)
+		time.sleep(3.2)
 
 def make_poly(width,height,i = 50, j = 40, k = 0 ):
 

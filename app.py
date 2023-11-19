@@ -63,6 +63,8 @@ def main():
                 hood_poly = make_hood_poly(width,height)
 
 
+                
+
 
                 mask_shape = cv2.fillPoly(blank.copy(), pts=[poly], color=255)
         
@@ -80,35 +82,39 @@ def main():
                 lines = cv2.HoughLinesP(mask_img, rho=1, theta=np.pi/180, threshold=90, lines=np.array([]), minLineLength=10, maxLineGap=20)
 
 
-                canContinue = True
+                can_cont = True
 
                 if lines is None:
                     print('no line detected!')
-                    canContinue = False
-
+                    can_cont = False
+                    
 
                 lines_img = image.copy()
 
                 error = 0
 
-                if canContinue == True :
+                if can_cont:
 
                     if (len(lines) == 1):
                         lines = [lines]
 
                     avg_lines , error = calc_avg_line(blank.copy(),lines) 
 
+                    print(error)
+
                     if abs(error) < 0.6:
                         error = 1 / error
-                        speed = 10
+                        # speed = 20
                         print('!!!!!!!!!!!!!!!!!!danger mode!!!!!!!!!!!!!!!')
-    
-                    error_trnaslated = translate(-1.5,1.5,-45,45,float(error))
-
-                    steering = -error_trnaslated
-
-                    lines_img = draw_lines(image.copy(),lines,(0,255,0))
                     
+
+                    
+                    lines_img = draw_lines(image.copy(),lines,(0,255,0))
+                
+                error_trnaslated = translate(-1.5,1.5,-45,45,float(error)) if error != 0 else 0
+
+                steering = -error_trnaslated
+                
                 #set final car steering
                 car.setSteering(steering)
                 
@@ -126,10 +132,6 @@ def main():
                 if cv2.waitKey(10) == ord('q'):
                     break
 
-                # end_time  = time.time()
-
-                # print('this proccess take ',end_time - start_time,'seconds')
-                print(error)
 
             time.sleep(0.001)
     
