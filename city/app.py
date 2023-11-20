@@ -16,12 +16,26 @@ def main():
     #straight sign == 4
     #left sign == 3
     #stop sign == 5
-    tags_list = {"2":"right",
-                 "3":"left",
-                 "4":"straight",
-                 "5":"stop"
+    tags_list = {
+        "1":None,
+        "2":"right",
+        "3":"left",
+        "4":"straight",
+        "5":"stop"
     }
     
+    #this object needs to configed accorded to map
+    #map 2 tags_list
+    tags_list = {
+        "1":"straight",
+        "2":"right",
+        "3":"left",
+        "4":"straight",
+        "5":"stop"
+    }
+    
+
+
     actions_list = {
         "right" : [
             {
@@ -39,7 +53,7 @@ def main():
             {
                 "speed":35,
                 "steering":0,
-                "time":5.5
+                "time":6
             },
         ],
         "left":[
@@ -57,6 +71,13 @@ def main():
 
     }
 
+    actions_delay = {
+        "right":0.5,
+        "left":0.5,
+        "straight":0.25,
+        "stop":0.5
+    }
+
     #Calling the class
     car = avisengine.Car()
 
@@ -69,12 +90,15 @@ def main():
 
     time.sleep(3)
     steering = 0
+
+    right_mode_repeated = 0
+
     try:
         while(True):
             
             counter += 1 
 
-            speed = 20
+            speed = 25
 
             
             #Get the data. Need to call it every time getting image and sensor data
@@ -108,10 +132,10 @@ def main():
 
                 sign_poly = np.array([
                     [
-                        (250        , 350),
+                        (250        , height),
                         (250         , 150),
                         (512 ,150),
-                        (512, 350)
+                        (512, height)
                     ]
                     ])
 
@@ -129,26 +153,38 @@ def main():
                 auto_mode = False
 
                 if ids is not None:
+
+                    print(ids[0][0])
+
+                    # break
+
                     action = tags_list[str(int(ids[0][0]))]
 
                     smalest_x = 100000000
                     biggest_x = -100000000
 
-                    i = 46
+                    i = 60
 
                     for (x,y) in corners[0][0]:
                         if x < smalest_x:
                             smalest_x = x
                         if x > biggest_x:
                             biggest_x = x
-                    print("unval ",action)
+                    print("rejected ",action)
+
+                    diff_x = biggest_x - smalest_x
 
                     if action == "stop":
                         i = 35
 
-                    if (biggest_x - smalest_x > i) :
-                        print(biggest_x,smalest_x)
-                        print(tags_list[str(int(ids[0][0]))])
+                    if diff_x > 20:
+                        speed = 20
+
+                    if diff_x > 30:
+                        speed = 15
+
+                    if (diff_x > i) :
+                        print(diff_x)
 
                         auto_mode = True
 
@@ -166,31 +202,18 @@ def main():
                    
                     # cv2.imshow("sign mask", final_sign_mask_img)
 
+                    car.setSteering(0)
+
                     action = tags_list[str(int(ids[0][0]))]
 
-                    if action == "straight":
-                        car.setSteering(0)
+                    time.sleep(actions_delay[action])
 
-                        handle_brake(car,car_speed)
+                    handle_brake(car,car_speed)
 
-                        for instruction in actions_list[action]:
-                            car.setSpeed(instruction["speed"])
-                            car.setSteering(instruction["steering"])
-                            time.sleep(instruction["time"])
-
-                        car.setSpeed(0)
-                    elif action == "stop":
-
-                        handle_brake(car,car_speed)
-
-                        break
-                    else:
-                        handle_brake(car,car_speed)
-
-                        for instruction in actions_list[action]:
-                            car.setSpeed(instruction["speed"])
-                            car.setSteering(instruction["steering"])
-                            time.sleep(instruction["time"])
+                    for instruction in actions_list[action]:
+                        car.setSpeed(instruction["speed"])
+                        car.setSteering(instruction["steering"])
+                        time.sleep(instruction["time"])
 
 
                     car.getData()
@@ -246,12 +269,21 @@ def main():
                         if (right_error > 1.3 )& (abs(left_error) > 1.3):
                             error = 0
 
-                        if (right_error == 0):
-                            error = -3
+                        if (right_error == 0) & (left_error < -1):
+                            right_mode_repeated += 1
+                            speed = 4
+                            error = - 4
+                        else:
+                            right_mode_repeated = 0
+
+                        if right_mode_repeated > 4:
+                            speed = 15
+
+
     
                         if (left_error == 0) & (right_error > 1):
                             speed = 5
-                            error = 6
+                            error = 4
 
                         if (abs(error) < 0.5) & (error != 0):
                             error = 1 / error
@@ -260,7 +292,6 @@ def main():
 
                         steering = -error_trnaslated
 
-                        print(right_error,left_error)
 
                         lines_img = draw_lines(image.copy(),lines,(0,255,0))
 

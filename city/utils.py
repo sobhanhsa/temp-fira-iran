@@ -4,22 +4,18 @@ import time
 
 def handle_brake_intensity(current_speed):
 
-	if current_speed > 25:
-		return 10
-	elif current_speed > 11:
-		return 8
-	return 6
+	# if current_speed > 25:
+	# 	return 5
+	# elif current_speed > 11:
+	# 	return 5
+	return 4
 
 def handle_brake(car,car_speed):
-	if car_speed > 11:
-		time.sleep(0.5)
-	else:
-		time.sleep(1.4)
 
 		car.setSpeed(-car_speed * handle_brake_intensity(car_speed))
 
 
-		time.sleep(1.2)
+		time.sleep(1.5)
 
 		car.setSpeed(0)
 
