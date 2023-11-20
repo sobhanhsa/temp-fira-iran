@@ -72,9 +72,9 @@ def main():
 
     actions_delay = {
         "right":0.75,
-        "left":0.5,
+        "left":1,
         "straight":0.75,
-        "stop":0.5
+        "stop":1
     }
 
     test_sign_mode = False
@@ -101,15 +101,10 @@ def main():
             
             counter += 1 
 
-
-
             speed = 25
 
-            
-            #Get the data. Need to call it every time getting image and sensor data
             car.getData()
 
-            #Start getting image and sensor data after 4 loops. for unclear some reason it's really important 
             if(counter > 4): 
 
                 car_speed = car.getSpeed()
@@ -152,8 +147,6 @@ def main():
                 
                 if test_sign_mode:
                     
-
-
                     test_sign(sign_mask_img)
 
                     car.setSpeed(0)
@@ -193,8 +186,11 @@ def main():
                     if action == "stop":
                         i = 35
 
-                    if diff_x > 45:
-                        speed = 10
+                    if diff_x > 25:
+                        speed = 20
+
+                    if diff_x > 35:
+                        speed = 15
 
                     if (diff_x > i) :
                         print(diff_x)
@@ -203,19 +199,7 @@ def main():
 
                         auto_mode = True
 
-
-
-                # car.setSpeed(0)
                 if auto_mode :
-
-
-                    # if corners:
-                    #     corners_img = cv2.rectangle(image.copy(),(int(corners[0][0][0][0]),int(corners[0][0][0][1])),(int(corners[0][0][2][0]),int(corners[0][0][2][1])),color=(255,0,0),thickness=2)
-                    #     # cv2.imshow('c image', corners_img)
-                    
-                    # cv2.imshow("image",image)
-                   
-                    # cv2.imshow("sign mask", final_sign_mask_img)
 
                     car.setSteering(0)
 
@@ -264,10 +248,7 @@ def main():
 
                     gray_mask_img = cv2.bitwise_and(gray,final_mask_shape)
 
-
-                    # lines = cv2.HoughLinesP(mask_img, rho=5, theta=np.pi/180, threshold=90, lines=np.array([]), minLineLength=10, maxLineGap=20)
                     lines = cv2.HoughLinesP(mask_img, rho=5, theta=np.pi/180 , threshold=90, lines=np.array([]), minLineLength=10, maxLineGap=20)
-
 
                     if lines is None:
                         print('no line detected!')
@@ -290,11 +271,6 @@ def main():
 
                         if (right_error > 1.3 )& (abs(left_error) > 1.3):
                             error = 0
-
-                        # if ((right_error > 0.9) & (error > 0)):
-                        #     print(error)
-                        #     print("right error ignored")
-                        #     error /= 4
 
                         if (right_error == 0) :
                             right_mode_repeated += 1
@@ -321,32 +297,15 @@ def main():
 
 
                         lines_img = draw_lines(image.copy(),lines,(0,255,0))
-
-                        
                     
-                    #set final car steering
-                    
-                    
-                    # speed = 0
-                    # steering = 0
-                    
-                    #set final car speed
                     car.setSpeed(speed)
                     
                     car.setSteering(steering)                
 
                 cv2.imshow('image', sign_mask_img)
                 
-
-                #break the loop when q pressed
                 if cv2.waitKey(10) == ord('q'):
                     break
-
-                # end_time  = time.time()
-
-                # print('this proccess take ',end_time - start_time,'seconds')
-                # print(error)
-
             time.sleep(0.001)
     
             
