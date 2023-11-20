@@ -3,8 +3,8 @@ import time
 import cv2
 import config
 import numpy as np
-from utils import *
-# from pid import PID
+from cityutils import *
+
 
 def main():
     #right sign == 2
@@ -13,43 +13,41 @@ def main():
     #stop sign == 5
     tags_list = {"2":"right",
                  "3":"left",
-                 "1":"straight",
                  "4":"straight",
+                 "1":"straight",
                  "5":"stop"
     }
-
-    # pid = PID(1, 0.1, 0.05, setpoint=30)
     
     actions_list = {
         "right" : [
             {
-                "speed": 40,
+                "speed": 30,
                 "steering" : 0,
-                "time" : 2.8
+                "time" : 2.5
             },
             {
-                "speed": 10,
-                "steering" : 120,
-                "time" : 5.5 
+                "speed": 5,
+                "steering" : 100,
+                "time" : 5.8
             }
         ],
         "straight":[
             {
-                "speed": 35,
-                "steering": 0,
-                "time": 6
+                "speed":35,
+                "steering":0,
+                "time":5.5
             },
         ],
         "left":[
             {
                 "speed": 30,
                 "steering" : 0,
-                "time" : 3
+                "time" : 2
             },
             {
-                "speed": 20,
+                "speed": 10,
                 "steering" : -55,
-                "time" : 8
+                "time" : 9
             }
         ]
 
@@ -106,8 +104,8 @@ def main():
 
                 sign_poly = np.array([
                     [
-                        (250, 350),
-                        (250, 150),
+                        (250        , 350),
+                        (250         , 150),
                         (512 ,150),
                         (512, 350)
                     ]
@@ -117,7 +115,7 @@ def main():
 
                 sign_mask_img = cv2.bitwise_and(gray,sign_mask_shape)
 
-                # sign_mask_img_overlay  = cv2.bitwise_or(gray,sign_mask_shape)
+                sign_mask_img_overlay  = cv2.bitwise_or(gray,sign_mask_shape)
 
                 arucoDict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_APRILTAG_36h11)
                 arucoParams = cv2.aruco.DetectorParameters()
@@ -127,13 +125,12 @@ def main():
                 auto_mode = False
 
                 if ids is not None:
-
                     action = tags_list[str(int(ids[0][0]))]
 
                     smalest_x = 100000000
                     biggest_x = -100000000
 
-                    i = 45
+                    i = 46
 
                     for (x,y) in corners[0][0]:
                         if x < smalest_x:
@@ -152,32 +149,40 @@ def main():
                         auto_mode = True
 
 
-                
-
 
                 # car.setSpeed(0)
                 if auto_mode :
-                    print("Switch to Auto Mode")
-                    
+
+
                     # if corners:
                     #     corners_img = cv2.rectangle(image.copy(),(int(corners[0][0][0][0]),int(corners[0][0][0][1])),(int(corners[0][0][2][0]),int(corners[0][0][2][1])),color=(255,0,0),thickness=2)
                     #     # cv2.imshow('c image', corners_img)
                     
                     # cv2.imshow("image",image)
                    
+                    # cv2.imshow("sign mask", final_sign_mask_img)
 
                     action = tags_list[str(int(ids[0][0]))]
 
-                    handle_brake(car,car_speed)                
+                    if action == "straight":
+                        car.setSteering(0)
 
-                    if action == "stop":
-                        
-                        break
+                        handle_brake(car,car_speed)
 
-                    else:
+                        for instruction in actions_list[action]:
+                            car.setSpeed(instruction["speed"])
+                            car.setSteering(instruction["steering"])
+                            time.sleep(instruction["time"])
 
                         car.setSpeed(0)
-                        
+                    elif action == "stop":
+
+                        handle_brake(car,car_speed)
+
+                        break
+                    else:
+                        handle_brake(car,car_speed)
+
                         for instruction in actions_list[action]:
                             car.setSpeed(instruction["speed"])
                             car.setSteering(instruction["steering"])
@@ -210,6 +215,8 @@ def main():
 
                     gray_mask_img = cv2.bitwise_and(gray,final_mask_shape)
 
+
+                    # lines = cv2.HoughLinesP(mask_img, rho=5, theta=np.pi/180, threshold=90, lines=np.array([]), minLineLength=10, maxLineGap=20)
                     lines = cv2.HoughLinesP(mask_img, rho=5, theta=np.pi/180 , threshold=90, lines=np.array([]), minLineLength=10, maxLineGap=20)
 
 
@@ -222,12 +229,7 @@ def main():
 
                     error = 0
 
-                    canContinue = False
-
-                    if car_speed < 12:
-                        canContinue = True
-                    else:
-                        speed = 0
+                    canContinue = True
 
                     if canContinue == True :
 
@@ -239,24 +241,16 @@ def main():
 
                         if (right_error > 1.3 )& (abs(left_error) > 1.3):
                             error = 0
-                            print("position : 1")
 
                         if (right_error == 0):
-                            error = -5
-                            print("position : 2")
-
+                            error = -3
     
                         if (left_error == 0) & (right_error > 1):
                             speed = 5
                             error = 6
-                            print("position : 3")
 
-                        
-
-                        if (abs(error) < 0.7) & (error != 0):
-                            speed = 50
+                        if (abs(error) < 0.5) & (error != 0):
                             error = 1 / error
-                            print("error changed")
 
                         error_trnaslated = translate(-1.5,1.5,-45,45,float(error))
 
@@ -266,6 +260,7 @@ def main():
 
                         lines_img = draw_lines(image.copy(),lines,(0,255,0))
 
+                        
                     
                     #set final car steering
                     
@@ -278,8 +273,7 @@ def main():
                     
                     car.setSteering(steering)                
 
-                # cv2.imshow('image', sign_mask_img)
-                cv2.imshow("sign mask", final_mask_shape)
+                cv2.imshow('image', sign_mask_img)
                 
 
                 #break the loop when q pressed
