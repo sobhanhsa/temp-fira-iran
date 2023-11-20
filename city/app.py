@@ -16,7 +16,7 @@ def main():
     #left sign == 3
     #stop sign == 5
     tags_list = {
-        "1":None,
+        "1":"straight",
         "2":"right",
         "3":"left",
         "4":"straight",
@@ -71,13 +71,13 @@ def main():
     }
 
     actions_delay = {
-        "right":0.5,
+        "right":0.75,
         "left":0.5,
-        "straight":0.25,
+        "straight":0.75,
         "stop":0.5
     }
 
-    test_sign_mode = True
+    test_sign_mode = False
 
     #Calling the class
     car = avisengine.Car()
@@ -93,6 +93,8 @@ def main():
     steering = 0
 
     right_mode_repeated = 0
+
+    diff_diff = 0
 
     try:
         while(True):
@@ -191,14 +193,13 @@ def main():
                     if action == "stop":
                         i = 35
 
-                    if diff_x > 20:
-                        speed = 20
-
-                    if diff_x > 30:
-                        speed = 15
+                    if diff_x > 45:
+                        speed = 10
 
                     if (diff_x > i) :
                         print(diff_x)
+
+                        diff_diff = diff_x - i if action != "stop" else 0
 
                         auto_mode = True
 
@@ -220,7 +221,14 @@ def main():
 
                     action = tags_list[str(int(ids[0][0]))]
 
-                    time.sleep(actions_delay[action])
+
+                    delay = actions_delay[action] - diff_diff * 0.125
+                   
+                    print(delay)                    
+
+                    time.sleep( delay if delay >= 0 else 0 )
+
+                    diff_diff = 0
 
                     handle_brake(car,car_speed)
 
@@ -288,14 +296,14 @@ def main():
                         #     print("right error ignored")
                         #     error /= 4
 
-                        if (right_error == 0) & (left_error < -1):
+                        if (right_error == 0) :
                             right_mode_repeated += 1
-                            speed = 4
+                            speed = 5
                             error = - 4
                         else:
                             right_mode_repeated = 0
 
-                        if right_mode_repeated > 4:
+                        if right_mode_repeated > 12:
                             speed = 15
 
 
