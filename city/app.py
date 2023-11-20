@@ -8,8 +8,7 @@ from utils import draw_lines
 from utils import calc_avg_line
 from utils import translate
 from utils import make_hood_poly
-from utils import handle_brake_intensity
-
+from test import test_sign
 
 def main():
     #right sign == 2
@@ -78,6 +77,8 @@ def main():
         "stop":0.5
     }
 
+    test_sign_mode = True
+
     #Calling the class
     car = avisengine.Car()
 
@@ -97,6 +98,8 @@ def main():
         while(True):
             
             counter += 1 
+
+
 
             speed = 25
 
@@ -133,8 +136,8 @@ def main():
                 sign_poly = np.array([
                     [
                         (250        , height),
-                        (250         , 150),
-                        (512 ,150),
+                        (250         , 0),
+                        (512 ,0),
                         (512, height)
                     ]
                     ])
@@ -144,6 +147,17 @@ def main():
                 sign_mask_img = cv2.bitwise_and(gray,sign_mask_shape)
 
                 sign_mask_img_overlay  = cv2.bitwise_or(gray,sign_mask_shape)
+                
+                if test_sign_mode:
+                    
+
+
+                    test_sign(sign_mask_img)
+
+                    car.setSpeed(0)
+
+                    continue
+
 
                 arucoDict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_APRILTAG_36h11)
                 arucoParams = cv2.aruco.DetectorParameters()
@@ -154,7 +168,7 @@ def main():
 
                 if ids is not None:
 
-                    print(ids[0][0])
+                    # print(ids[0][0])
 
                     # break
 
@@ -268,6 +282,11 @@ def main():
 
                         if (right_error > 1.3 )& (abs(left_error) > 1.3):
                             error = 0
+
+                        # if ((right_error > 0.9) & (error > 0)):
+                        #     print(error)
+                        #     print("right error ignored")
+                        #     error /= 4
 
                         if (right_error == 0) & (left_error < -1):
                             right_mode_repeated += 1
