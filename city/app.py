@@ -4,7 +4,7 @@ import cv2
 import config
 import numpy as np
 from utils import *
-
+# from pid import PID
 
 def main():
     #right sign == 2
@@ -13,35 +13,38 @@ def main():
     #stop sign == 5
     tags_list = {"2":"right",
                  "3":"left",
+                 "1":"straight",
                  "4":"straight",
                  "5":"stop"
     }
+
+    # pid = PID(1, 0.1, 0.05, setpoint=30)
     
     actions_list = {
         "right" : [
             {
                 "speed": 40,
-                "steering" : 5,
-                "time" : 2.5
+                "steering" : 0,
+                "time" : 2.8
             },
             {
                 "speed": 10,
                 "steering" : 120,
-                "time" : 5.8
+                "time" : 5.5 
             }
         ],
         "straight":[
             {
                 "speed": 35,
                 "steering": 0,
-                "time": 5.3
+                "time": 6
             },
         ],
         "left":[
             {
                 "speed": 30,
                 "steering" : 0,
-                "time" : 2
+                "time" : 3
             },
             {
                 "speed": 20,
@@ -219,7 +222,12 @@ def main():
 
                     error = 0
 
-                    canContinue = True
+                    canContinue = False
+
+                    if car_speed < 12:
+                        canContinue = True
+                    else:
+                        speed = 0
 
                     if canContinue == True :
 
@@ -234,7 +242,7 @@ def main():
                             print("position : 1")
 
                         if (right_error == 0):
-                            error = -3
+                            error = -5
                             print("position : 2")
 
     
@@ -245,7 +253,7 @@ def main():
 
                         
 
-                        if (abs(error) < 0.5) & (error != 0):
+                        if (abs(error) < 0.7) & (error != 0):
                             speed = 50
                             error = 1 / error
                             print("error changed")

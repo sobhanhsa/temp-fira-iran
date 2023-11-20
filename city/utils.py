@@ -12,10 +12,10 @@ def handle_brake_intensity(current_speed):
 
 def handle_brake(car,car_speed):
 
-	if car_speed > 11:
+	if car_speed > 12:
 		time.sleep(0.5)
 	else:
-		time.sleep(0.9)
+		time.sleep(0.6)
 
 		car.setSpeed(-car_speed * handle_brake_intensity(car_speed))
 
