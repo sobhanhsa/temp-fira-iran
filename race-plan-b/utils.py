@@ -1,12 +1,12 @@
 import cv2	
 import numpy as np
 
-def make_poly(width,height,i = 75, j = -10, k = 30 ):
+def make_poly(width,height,i = 125, j = -10, k = 30 ):
 
     return np.array([
     [
         (0, height - k),
-        (int(width / 2) - i , int(height / 2) - j -20),
+        (int(width / 2) - i , int(height / 2) - j),
         (int(width / 2) + i , int(height / 2) - j),
         (width, height -k)
     ]

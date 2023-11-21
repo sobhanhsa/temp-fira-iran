@@ -19,14 +19,19 @@ def main():
 
     counter = 0
 
-    time.sleep(3)
+    # time.sleep(3)
+    
     steering = 0
+    repeated_danjer_mode = 0
+    speed = 100
+    
     try:
+
+        
         while(True):
             
             counter += 1 
 
-            speed = 50
 
             
    
@@ -35,7 +40,8 @@ def main():
             car.getData()
 
             #Start getting image and sensor data after 4 loops. for unclear some reason it's really important 
-            if(counter > 4): 
+            if((counter > 4) & (counter % 3 == 0)): 
+                print(counter)
 
                 #returns an opencv image type array. if you use PIL you need to invert the color channels.
                 _image = car.getImage()
@@ -98,13 +104,32 @@ def main():
 
                     avg_lines , error , right_err , left_err = calc_avg_line(blank.copy(),lines) 
 
-                    if ((right_err > 1.6) & (abs(left_err) > 0.7 )) | ((abs(left_err) > 1.6) & (right_err > 0.7)):
+                    if ((right_err > 1.3) & (abs(left_err) > 0.5 )) | ((abs(left_err) > 1.3) & (right_err > 0.2)):
+                        error /= -5
+
+                    if ((right_err > 1.6) & (abs(left_err) > 0.1 )) | ((abs(left_err) > 1.6) & (right_err > 0.2)):
                         error = 0
 
-                    if ((right_err < 0.1) & (left_err != 0)) | ((abs(left_err) < 0.1) & (right_err != 0)):
-                        error = 1 / error 
+
+                    if ((right_err < 0.2) & (left_err != 0)) | ((abs(left_err) < 0.1) & (right_err != 0)):
+                        
+                        repeated_danjer_mode += 1
+                        
+                        if repeated_danjer_mode > 6:
+                            print("speed reduced due to danjer mode ")
+                            speed = 30
+                            error = 1 / error
+                        else:
+                            error = (1 / error) / 2 - repeated_danjer_mode / 6 
+                        
+                        speed = speed - 10 if speed > 40 else 40
+
+
                         print(error)
-                        speed /= 2
+
+                    else :
+                        speed = 100
+                        repeated_danjer_mode = 0
                     
     
                     error_trnaslated = translate(-1.5,1.5,-45,45,float(error))
