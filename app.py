@@ -118,7 +118,7 @@ def main():
                 car.setSpeed(speed)
 
                 #showing the opencv type image
-                cv2.imshow('raw image', gray_mask_img)
+                cv2.imshow('mask image', gray_mask_img)
                 cv2.imshow('lines image', lines_img)
                 # cv2.imshow('avg lines image', avg_lines_img)
 

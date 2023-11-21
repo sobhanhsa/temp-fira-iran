@@ -99,7 +99,7 @@ def main():
     try:
         while(True):
             
-            counter += 1 
+            counter += 1    
 
             speed = 25
 
