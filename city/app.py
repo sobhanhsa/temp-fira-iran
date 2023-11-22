@@ -23,12 +23,12 @@ def main():
             {
                 "speed": 30,
                 "steering" : 0,
-                "time" : 2.5
+                "time" : 3.5
             },
             {
                 "speed": 5,
                 "steering" : 100,
-                "time" : 5.8
+                "time" : 5.5
             }
         ],
         "straight":[
@@ -42,7 +42,7 @@ def main():
             {
                 "speed": 30,
                 "steering" : 0,
-                "time" : 2
+                "time" : 3.5
             },
             {
                 "speed": 10,
@@ -97,15 +97,11 @@ def main():
 
                 height, width = gray.shape
 
-#                         (400, 350),
-#                         (400 , 150),
-#                         (512 ,150),
-#                         (512, 350)
 
                 sign_poly = np.array([
                     [
-                        (250        , 350),
-                        (250         , 150),
+                        (250, 350),
+                        (250, 150),
                         (512 ,150),
                         (512, 350)
                     ]
@@ -163,25 +159,15 @@ def main():
                     # cv2.imshow("sign mask", final_sign_mask_img)
 
                     action = tags_list[str(int(ids[0][0]))]
+                    
 
-                    if action == "straight":
-                        car.setSteering(0)
+                    handle_brake(car,car_speed)
 
-                        handle_brake(car,car_speed)
 
-                        for instruction in actions_list[action]:
-                            car.setSpeed(instruction["speed"])
-                            car.setSteering(instruction["steering"])
-                            time.sleep(instruction["time"])
-
-                        car.setSpeed(0)
-                    elif action == "stop":
-
-                        handle_brake(car,car_speed)
-
+                    if action == "stop":
                         break
+
                     else:
-                        handle_brake(car,car_speed)
 
                         for instruction in actions_list[action]:
                             car.setSpeed(instruction["speed"])
@@ -229,7 +215,13 @@ def main():
 
                     error = 0
 
-                    canContinue = True
+                    canContinue = False
+
+                    if car_speed < 12:
+                        canContinue = True
+
+                    else:
+                        speed = 0
 
                     if canContinue == True :
 
@@ -243,13 +235,14 @@ def main():
                             error = 0
 
                         if (right_error == 0):
-                            error = -3
+                            error = -5
     
                         if (left_error == 0) & (right_error > 1):
                             speed = 5
                             error = 6
 
                         if (abs(error) < 0.5) & (error != 0):
+                            speed = 25
                             error = 1 / error
 
                         error_trnaslated = translate(-1.5,1.5,-45,45,float(error))
@@ -260,6 +253,7 @@ def main():
 
                         lines_img = draw_lines(image.copy(),lines,(0,255,0))
 
+            
                         
                     
                     #set final car steering

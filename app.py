@@ -3,11 +3,7 @@ import time
 import cv2
 import config
 import numpy as np
-from utils import make_poly
-from utils import draw_lines
-from utils import calc_avg_line
-from utils import translate
-from utils import make_hood_poly
+from utils import *
 
 
 def main():
@@ -26,9 +22,7 @@ def main():
             
             counter += 1 
 
-            speed = 70
-
-            
+            speed = 100
    
 
             #Get the data. Need to call it every time getting image and sensor data
@@ -61,8 +55,6 @@ def main():
                 poly = make_poly(width,height)
 
                 hood_poly = make_hood_poly(width,height)
-
-
 
                 mask_shape = cv2.fillPoly(blank.copy(), pts=[poly], color=255)
         
@@ -100,10 +92,10 @@ def main():
 
                     if abs(error) < 0.6:
                         error = 1 / error
-                        speed = 10
+                        speed = 90
                         print('!!!!!!!!!!!!!!!!!!danger mode!!!!!!!!!!!!!!!')
-    
-                    error_trnaslated = translate(-1.5,1.5,-45,45,float(error))
+                    
+                    error_trnaslated = translate(-1.5, 1.5,-45, 45, float(error))
 
                     steering = -error_trnaslated
 

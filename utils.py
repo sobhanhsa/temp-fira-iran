@@ -1,14 +1,15 @@
 import cv2	
 import numpy as np
 
-def make_poly(width,height,i = 15, j = 0, k = 0 ):
+def make_poly(width,height,i = 15, j = 0, k = 30 ):
 
     return np.array([
     [
         (0, height - k),
-        (int(width / 2) - i , int(height / 2) + j),
+        (int(width / 2) - i , int(height / 2) - j),
         (int(width / 2) + i , int(height / 2) + j),
-        (width, height -k)
+        (width, height - k)
+
     ]
     ])
 
@@ -17,9 +18,9 @@ def make_hood_poly(width,height,i = 15, j = 0, k = 0 ):
 	return np.array([
 	[
 		(110, height - k),
-		(180 , 400),
-		(340 ,400),
-		(425, height -k)
+		(180 , 390),
+		(360 ,390),
+		(425, height + k)
 	]
 	])
 
