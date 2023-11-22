@@ -40,7 +40,7 @@ def main():
             car.getData()
 
             #Start getting image and sensor data after 4 loops. for unclear some reason it's really important 
-            if((counter > 4) & (counter % 3 == 0)): 
+            if((counter > 4) & (counter % 2 == 0)): 
                 print(counter)
 
                 #returns an opencv image type array. if you use PIL you need to invert the color channels.
@@ -104,14 +104,14 @@ def main():
 
                     avg_lines , error , right_err , left_err = calc_avg_line(blank.copy(),lines) 
 
-                    if ((right_err > 1.3) & (abs(left_err) > 0.5 )) | ((abs(left_err) > 1.3) & (right_err > 0.2)):
+                    if ((right_err > 1.3) & (abs(left_err) > 0.5 )) | ((abs(left_err) > 1.3) & (right_err > 0.5)):
                         error /= -5
 
                     if ((right_err > 1.6) & (abs(left_err) > 0.1 )) | ((abs(left_err) > 1.6) & (right_err > 0.4)):
                         error = 0
 
 
-                    if ((right_err < 0.4) & (left_err != 0)) | ((abs(left_err) < 0.1) & (right_err != 0)):
+                    if ((right_err < 0.5) & (left_err != 0)) | ((abs(left_err) < 0.1) & (right_err != 0)):
                         
                         repeated_danjer_mode += 1
                         
