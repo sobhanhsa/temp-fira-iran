@@ -107,22 +107,22 @@ def main():
                     if ((right_err > 1.3) & (abs(left_err) > 0.5 )) | ((abs(left_err) > 1.3) & (right_err > 0.2)):
                         error /= -5
 
-                    if ((right_err > 1.6) & (abs(left_err) > 0.1 )) | ((abs(left_err) > 1.6) & (right_err > 0.2)):
+                    if ((right_err > 1.6) & (abs(left_err) > 0.1 )) | ((abs(left_err) > 1.6) & (right_err > 0.4)):
                         error = 0
 
 
-                    if ((right_err < 0.2) & (left_err != 0)) | ((abs(left_err) < 0.1) & (right_err != 0)):
+                    if ((right_err < 0.4) & (left_err != 0)) | ((abs(left_err) < 0.1) & (right_err != 0)):
                         
                         repeated_danjer_mode += 1
                         
-                        if repeated_danjer_mode > 6:
+                        if repeated_danjer_mode > 4:
                             print("speed reduced due to danjer mode ")
                             speed = 30
                             error = 1 / error
                         else:
-                            error = (1 / error) / 2 - repeated_danjer_mode / 6 
+                            error = (1 / error) / 2 - repeated_danjer_mode / 4 
                         
-                        speed = speed - 10 if speed > 40 else 40
+                        speed = speed - 15 if speed > 40 else 40
 
 
                         print(error)
