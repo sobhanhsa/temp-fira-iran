@@ -12,6 +12,15 @@ def make_poly(width,height,i = 125, j = -10, k = 30 ):
     ]
     ])
 
+def cal_last_delta(arr):
+	num = arr[len(arr) - 1]
+	i = 0
+	for n in arr:
+		if len(arr) - i -1 < 3:
+			num -= n
+		i += 1
+	return num 
+
 def make_hood_poly(width,height,i = 15, j = 0, k = 0 ):
 
 	return np.array([

@@ -3,11 +3,7 @@ import time
 import cv2
 import config
 import numpy as np
-from utils import make_poly
-from utils import draw_lines
-from utils import calc_avg_line
-from utils import translate
-from utils import make_hood_poly
+from utils import *
 
 
 def main():
@@ -24,7 +20,8 @@ def main():
     steering = 0
     repeated_danjer_mode = 0
     speed = 100
-    
+    prev_errs = []
+
     try:
 
         
@@ -40,8 +37,7 @@ def main():
             car.getData()
 
             #Start getting image and sensor data after 4 loops. for unclear some reason it's really important 
-            if((counter > 4) & (counter % 2 == 0)): 
-                print(counter)
+            if((counter > 4)): 
 
                 #returns an opencv image type array. if you use PIL you need to invert the color channels.
                 _image = car.getImage()
@@ -108,30 +104,26 @@ def main():
                         error /= -5
 
                     if ((right_err > 1.6) & (abs(left_err) > 0.1 )) | ((abs(left_err) > 1.6) & (right_err > 0.4)):
-                        error = 0
+                        error /= 6
 
 
-                    if ((right_err < 0.5) & (left_err != 0)) | ((abs(left_err) < 0.1) & (right_err != 0)):
-                        
-                        repeated_danjer_mode += 1
-                        
-                        if repeated_danjer_mode > 4:
-                            print("speed reduced due to danjer mode ")
-                            speed = 30
+                    if len(prev_errs) >= 3 :
+                        print(cal_last_delta(prev_errs))
+
+                        if ((right_err < 0.4) & (left_err != 0)) | ((abs(left_err) < 0.3) & (right_err != 0)):
+                            repeated_danjer_mode += 1
+
+
                             error = 1 / error
-                        else:
-                            error = (1 / error) / 2 - repeated_danjer_mode / 4 
+
+                            error += cal_last_delta(prev_errs) / 5
                         
-                        speed = speed - 15 if speed > 40 else 40
 
-
-                        print(error)
-
-                    else :
-                        speed = 100
-                        repeated_danjer_mode = 0
-                    
-    
+                        else :
+                            speed = 100
+                            repeated_danjer_mode = 0
+                        
+        
                     error_trnaslated = translate(-1.5,1.5,-45,45,float(error))
 
 
@@ -139,6 +131,8 @@ def main():
 
                     lines_img = draw_lines(image.copy(),lines,(0,255,0))
                     
+                prev_errs.append(error)
+
                 #set final car steering
                 car.setSteering(steering)
                 

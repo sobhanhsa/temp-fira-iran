@@ -186,11 +186,8 @@ def main():
                     if action == "stop":
                         i = 35
 
-                    if diff_x > 25:
-                        speed = 20
-
                     if diff_x > 35:
-                        speed = 15
+                        speed = 20
 
                     if (diff_x > i) :
                         print(diff_x)
