@@ -1,15 +1,14 @@
 import cv2	
 import numpy as np
 
-def make_poly(width,height,i = 15, j = 0, k = 30 ):
+def make_poly(width,height,i = 0, j = 70, k = 60 ):
 
     return np.array([
     [
         (0, height - k),
         (int(width / 2) - i , int(height / 2) - j),
-        (int(width / 2) + i , int(height / 2) + j),
+        (int(width / 2) + i , int(height / 2) - j),
         (width, height - k)
-
     ]
     ])
 
@@ -19,8 +18,8 @@ def make_hood_poly(width,height,i = 15, j = 0, k = 0 ):
 	[
 		(110, height - k),
 		(180 , 390),
-		(360 ,390),
-		(425, height + k)
+		(340 ,390),
+		(425, height -k)
 	]
 	])
 
@@ -78,4 +77,5 @@ def calc_avg_line(image, lines):
 	error = (left_line_avg_fix[0] + right_line_avg_fix[0]) / 2
 		
  
-	return np.array([left_line, right_line]), error
+	return np.array([left_line, right_line]), error , right_line_avg_fix[0] , left_line_avg_fix[0]
+	

@@ -15,21 +15,25 @@ def main():
 
     counter = 0
 
-    time.sleep(3)
+    time.sleep(1)
+    
     steering = 0
+    repeated_danjer_mode = 0
+    speed = 100
+    
     try:
+
+        
         while(True):
             
             counter += 1 
-
-            speed = 100
-   
 
             #Get the data. Need to call it every time getting image and sensor data
             car.getData()
 
             #Start getting image and sensor data after 4 loops. for unclear some reason it's really important 
-            if(counter > 4): 
+            if((counter > 4)): 
+                print(counter)
 
                 #returns an opencv image type array. if you use PIL you need to invert the color channels.
                 _image = car.getImage()
@@ -68,9 +72,7 @@ def main():
 
                 gray_mask_img = cv2.bitwise_and(gray,final_mask_shape)
 
-
                 lines = cv2.HoughLinesP(mask_img, rho=1, theta=np.pi/180, threshold=90, lines=np.array([]), minLineLength=10, maxLineGap=20)
-
 
                 canContinue = True
 
@@ -78,24 +80,46 @@ def main():
                     print('no line detected!')
                     canContinue = False
 
+                
+                steering = 0
 
                 lines_img = image.copy()
 
                 error = 0
 
                 if canContinue == True :
-
+                    
+                
                     if (len(lines) == 1):
                         lines = [lines]
 
-                    avg_lines , error = calc_avg_line(blank.copy(),lines) 
+                    avg_lines , error , right_error , left_error = calc_avg_line(blank.copy(),lines) 
 
-                    if abs(error) < 0.6:
-                        error = 1 / error
-                        speed = 90
-                        print('!!!!!!!!!!!!!!!!!!danger mode!!!!!!!!!!!!!!!')
+                    if ((right_error > 1.3) & (abs(left_error) > 0.5 )) | ((abs(left_error) > 1.3) & (right_error > 0.5)):
+                        error /= 5
+
+                    if ((right_error > 1.6) & (abs(left_error) > 0.5 )) | ((abs(left_error) > 1.6) & (right_error > 0.5)):
+                        error = 0
+
+                    if ((right_error < 0.5) & (left_error != 0)) | ((abs(left_error) < 0.1) & (right_error != 0)):
+                        
+                        
+                        if repeated_danjer_mode > 4:    
+                            print("speed reduced due to danjer mode ")
+                            error = 1 / error
+                            
+                        else:
+                            error = (1 / error) / 2 
                     
-                    error_trnaslated = translate(-1.5, 1.5,-45, 45, float(error))
+
+                        print(error)
+
+                    else :
+                        repeated_danjer_mode = 0
+                    
+    
+                    error_trnaslated = translate(-1.5, 1.5, -45, 45, float(error))
+
 
                     steering = -error_trnaslated
 
@@ -104,7 +128,6 @@ def main():
                 #set final car steering
                 car.setSteering(steering)
                 
-                steering = 0
                 
                 #set final car speed
                 car.setSpeed(speed)
@@ -118,10 +141,6 @@ def main():
                 if cv2.waitKey(10) == ord('q'):
                     break
 
-                # end_time  = time.time()
-
-                # print('this proccess take ',end_time - start_time,'seconds')
-                print(error)
 
             time.sleep(0.001)
     
