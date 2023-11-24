@@ -98,7 +98,7 @@ def main():
             
             counter += 1    
 
-            speed = 25
+            speed = 30
 
             car.getData()
 
@@ -186,7 +186,10 @@ def main():
                     if action == "left":
                         i = 52
 
-                    if (diff_x > 20) & (diff_x < i - 5):
+                    if action == "straight":
+                        i = 55
+
+                    if (diff_x > 15) & (diff_x < i):
                         speed = 15
 
                     if (diff_x > i) :
@@ -286,7 +289,7 @@ def main():
                             speed = 5
                             error = - 4
                             if turn_mode_repeated > 12:
-                                speed = 15
+                                speed = 12
                         else:
                             turn_mode_repeated = 0
 
