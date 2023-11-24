@@ -7,13 +7,13 @@ def handle_brake_intensity(current_speed):
 	# if current_speed > 25:
 	# 	return 5
 	if current_speed > 20:
-		return 1.4 + 0.4 * 25 / current_speed
-	if current_speed > 15:
-		return 0.9 + 0.5 * 20 / current_speed
+		return 1.4 + 0.95 * 25 / current_speed
+	if current_speed > 14:
+		return 1.2 + 1.8 * 20 / current_speed
 	elif current_speed > 12:
-		return 0.7 + 0.6 * 15 / current_speed
+		return 1 + 2.7 * 14 / current_speed
 	else:
-		return 1
+		return 0.8 + 2.1 * 12 / current_speed
 
 def handle_brake(car,car_speed):
 
